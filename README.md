@@ -19,12 +19,12 @@ along with HH-DW. If not, see <http://www.gnu.org/licenses/>.
 
 ##Installation
 
-###Pre-requisites
+###Prerequisites
 
 The HH-DW prototype runs on the Oracle database 11g. Create a separate user for the hetero-homogeneous data warehouse system. Ensure that the user has sufficient privileges for creating tables, views, indexes, sequences, packages, procesdures, and types. The user also needs access privileges on the data dictionary as well as execute privileges for procedures, packages, and types.
 
 ###PL/SQL Scripts
-Run the PL/SQL scripts supplied in the /src/at/jku/dke/hhdw/sys directory in the following order:
+Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the following order:
 
 1.) error_code.sql
 
@@ -35,6 +35,9 @@ Run the PL/SQL scripts supplied in the /src/at/jku/dke/hhdw/sys directory in the
 4.) dimension.sql
 
 5.) mcube.sql
+
+###SQL(M) Interpreter
+The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script.
 
 ##Contributors
 
