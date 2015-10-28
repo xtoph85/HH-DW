@@ -39,7 +39,7 @@ Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the 
 For more information on the hetero-homogeneous data warehouse prototype, please refer to Christoph Schuetz' Master's thesis [1].
 
 ###SQL(M) Interpreter
-The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first install the SQL(M) interpreter JAR file as a stored procedure on your Oracle database system. The SQL(M) interpreter sources are available in the src/at/jku/dke/hhdw/sqlm directory.
+The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first install the SQL(M) interpreter JAR file as a stored procedure on your Oracle database system. The SQL(M) interpreter sources are available in the src/at/jku/dke/hhdw/sqlm directory. Compile the provided Java sources and package the class files in a JAR file.
 
 To load the SQL(M) interpreter into the Oracle database use the following command-line instruction:
 
