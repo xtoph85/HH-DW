@@ -37,7 +37,7 @@ Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the 
 5.) mcube.sql
 
 ###SQL(M) Interpreter
-The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script.
+The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
 
 ##Contributors
 
