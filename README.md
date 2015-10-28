@@ -21,8 +21,7 @@ along with HH-DW. If not, see <http://www.gnu.org/licenses/>.
 
 ###Pre-requisites
 
-The HH-DW prototype runs on the Oracle database 11g. Create a separate user for the hetero-homogeneous data warehouse system. Ensure that the user has sufficient privileges for creating tables, views, indexes, sequences, packages, procesdures, and types. You will need access privileges on the data dictionary. You will also need privileges to execute procedures, packages, and types.
-
+The HH-DW prototype runs on the Oracle database 11g. Create a separate user for the hetero-homogeneous data warehouse system. Ensure that the user has sufficient privileges for creating tables, views, indexes, sequences, packages, procesdures, and types. The user also needs access privileges on the data dictionary as well as execute privileges for procedures, packages, and types.
 
 ##Contributors
 
