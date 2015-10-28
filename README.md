@@ -36,7 +36,7 @@ Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the 
 
 5.) mcube.sql
 
-For more information on the hetero-homogeneous data warehouse prototype, please refer to Christoph Schütz' Master's thesis [1].
+For more information on the hetero-homogeneous data warehouse prototype, please refer to Christoph Schuetz' Master's thesis [1].
 
 ###SQL(M) Interpreter
 The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first install the SQL(M) interpreter JAR file as a stored procedure on your Oracle database system. The SQL(M) interpreter sources are available in the src/at/jku/dke/hhdw/sqlm directory.
@@ -63,7 +63,7 @@ Thomas Pecksteiner
 
 ## Bibliography
 
-[1] Schütz, C.: Extending data warehouses with hetero-homogeneous dimension hierarchies and cubes: A proof-of-concept prototype in Oracle. Master's thesis, Johannes Kepler University Linz, 2010. 
+[1] Schuetz, C.G.: Extending data warehouses with hetero-homogeneous dimension hierarchies and cubes: A proof-of-concept prototype in Oracle. Master's thesis, Johannes Kepler University Linz, 2010. 
 http://www.dke.uni-linz.ac.at/research/publications/details.xq?type=masterthesis&code=MT1002
 
 [2] Pecksteiner, T.: An Interpreter for a Data Definition and Query Language for Hetero-Homogeneous Data Warehouses. Master's thesis, Johannes Kepler University Linz, 2015. 
