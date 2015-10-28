@@ -17,11 +17,42 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with HH-DW. If not, see <http://www.gnu.org/licenses/>.
 
-Installation
-----
+##Installation
 
-Contributors
-----
+###Prerequisites
+
+The HH-DW prototype runs on the Oracle database 11g. Create a separate user for the hetero-homogeneous data warehouse system. Ensure that the user has sufficient privileges for creating tables, views, indexes, sequences, packages, procesdures, and types. The user also needs access privileges on the data dictionary as well as execute privileges for procedures, packages, and types.
+
+###PL/SQL Scripts
+Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the following order:
+
+1.) error_code.sql
+
+2.) identifiers.sql
+
+3.) mobject.sql
+
+4.) dimension.sql
+
+5.) mcube.sql
+
+###SQL(M) Interpreter
+The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first install the SQL(M) interpreter JAR file as a stored procedure on your Oracle database system. The SQL(M) interpreter sources are available in the src/at/jku/dke/hhdw/sqlm directory.
+
+To load the SQL(M) interpreter into the Oracle database use the following command-line instruction:
+
+loadjava -u username/password -v -resolve filepath/Interpreter.jar
+
+Example: loadjava -u scott/tiger -v -resolve C:\Interpreter.jar
+
+For deleting the SQL(m) interpreter use the following command-line instruction:
+
+dropjava -u username/password -v filepath/Interpreter.jar
+
+After installing the Java stored procedures run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
+
+##Contributors
+
 Christoph G. Schuetz (Project Leader)
 
 Thomas Pecksteiner
