@@ -59,7 +59,7 @@ For more information on the SQL(M) interpreter, please refer to Thomas Peckstein
 
 Christoph G. Schuetz (Project Leader)
 
-Thomas Pecksteiner
+Thomas Pecksteiner (SQL(M) Intepreter)
 
 ## Bibliography
 
