@@ -53,7 +53,7 @@ dropjava -u username/password -v filename
 
 After installing the Java stored procedures run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
 
-For more information on the SQL(M) language and its interpreter, please refer to Thomas Pecksteiner's Master's thesis [2].
+For more information on the SQL(M) language and the corresponding interpreter in Java, please refer to Thomas Pecksteiner's Master's thesis [2].
 
 ##Contributors
 
