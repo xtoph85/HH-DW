@@ -17,16 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with HH-DW. If not, see <http://www.gnu.org/licenses/>.
 
-Installation
-----
-Pre-requisites
-____
+##Installation
+
+###Pre-requisites
+
 The HH-DW prototype runs on the Oracle database 11g. Ensure that you have sufficient privileges for creating tables,
 views, indexes, sequences, packages, procesdures, and types. You will need access privileges on the data dictionary. You will also need privileges to execute procedures, packages, and types.
 
 
-Contributors
-----
+##Contributors
+
 Christoph G. Schuetz (Project Leader)
 
 Thomas Pecksteiner
