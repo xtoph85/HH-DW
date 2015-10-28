@@ -37,7 +37,18 @@ Run the PL/SQL scripts supplied in the src/at/jku/dke/hhdw/sys directory in the 
 5.) mcube.sql
 
 ###SQL(M) Interpreter
-The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
+The SQL(M) interpreter is a more intuitive user interface for the hetero-homogeneous data warehouse system. In order to install the interpreter, first install the SQL(M) interpreter JAR file as a stored procedure on your Oracle database system.
+
+To load the SQL(M) interpreter into the Oracle database use the following command-line instruction:
+
+loadjava -u username/password -v -resolve filepath\Interpreter.jar
+
+Example: loadjava -u scott/tiger -v -resolve c:\Interpreter.jar
+
+For deleting the SQL(m) interpreter use the following command-line instruction:
+dropjava -u username/password -v filepath\Interpreter.jar
+
+After installing the Java stored procedures run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
 
 ##Contributors
 
