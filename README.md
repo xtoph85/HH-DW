@@ -43,13 +43,13 @@ The SQL(M) interpreter is a more intuitive user interface for the hetero-homogen
 
 To load the SQL(M) interpreter into the Oracle database use the following command-line instruction:
 
-loadjava -u username/password -v -resolve filepath/Interpreter.jar
+loadjava -u username/password -v -resolve filename
 
 Example: loadjava -u scott/tiger -v -resolve C:\Interpreter.jar
 
 For deleting the SQL(m) interpreter use the following command-line instruction:
 
-dropjava -u username/password -v filepath/Interpreter.jar
+dropjava -u username/password -v filename
 
 After installing the Java stored procedures run the src/at/jku/dke/hhdw/sqlm/interpreter.sql PL/SQL script under the same user as the core HH-DW system.
 
