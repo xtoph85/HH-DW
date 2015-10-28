@@ -1,0 +1,1601 @@
+options
+{
+  JDK_VERSION = "1.5";
+  STATIC = true;
+  MULTI = true;
+  NODE_DEFAULT_VOID = true; // do not create an AST node class unless otherwise stated
+  NODE_PREFIX = "AST";      // all classes are prefixed with "AST"
+  IGNORE_CASE = true;       // SQL-M is case-insensitive
+  NODE_CLASS = "SQLMNode";
+}
+
+PARSER_BEGIN(SQLMParser)
+
+package at.jku.dke.sqlm.parser;
+
+public class SQLMParser
+{
+  public static void main(String args [])
+  {
+    System.out.println("Reading from standard input...");
+    System.out.print("Enter an SQL(M) block:");
+    
+    new SQLMParser(System.in);
+    
+    try
+    {
+      ASTSQLMDocument n = SQLMParser.Start();
+      
+      n.dump("");
+      
+      System.out.println("Thank you.");
+    }
+    catch (Exception e)
+    {
+      System.out.println("Oops.");
+      System.out.println(e.getMessage());
+    }
+  }
+}
+
+PARSER_END(SQLMParser)
+
+
+SKIP :
+{
+  " "
+| "\t"
+| "\r"
+| "\n"
+}
+
+SPECIAL_TOKEN:
+{
+   < LINE_COMMENT: "--"(~["\r","\n"])*>
+|  < MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+
+TOKEN : /* KEYWORDS */
+{
+  < K_BEGIN : "BEGIN" >
+| < K_END : "END" >
+| < K_CREATE : "CREATE">
+| < K_K_ALTER : "ALTER" >
+| < K_DROP : "DROP" >
+| < K_UPDATE : "UPDATE" >
+| < K_DIMENSION : "DIMENSION" >
+| < K_HIERARCHY : "HIERARCHY" >
+| < K_OBJECT : "OBJECT" >
+| < K_OBJECTS : "OBJECTS" >
+| < K_MULTILEVEL : "MULTILEVEL" >
+| < K_CUBE : "CUBE" >
+| < K_FACT : "FACT" >
+| < K_IN : "IN" >
+| < K_AT : "AT" >
+| < K_LEVEL : "LEVEL" >
+| < K_UNDER : "UNDER" >
+| < K_CHILD : "CHILD" >
+| < K_OF : "OF" >
+| < K_NULL : "NULL" >
+| < K_DIMENSIONS : "DIMENSIONS" >
+| < K_BETWEEN : "BETWEEN" >
+| < K_CONNECTION : "CONNECTION" >
+| < K_ADD : "ADD" >
+| < K_ATTRIBUTE : "ATTRIBUTE" >
+| < K_MEASURE : "MEASURE" >
+| < K_SET : "SET" >
+| < K_DEFAULT : "DEFAULT" >
+| < K_SHARED : "SHARED" >
+| < K_SUM : "SUM" >
+| < K_AVG : "AVG" >
+| < K_MIN : "MIN" >
+| < K_MAX : "MAX" >
+| < K_SET_UNION : "SET_UNION" >
+| < K_BULK : "BULK" >
+| < K_SELECT : "SELECT" >
+| < K_FROM : "FROM" >
+| < K_WHERE : "WHERE" >
+| < K_LIKE : "LIKE" >
+| < K_DICE : "DICE" >
+| < K_ROLLUP : "ROLLUP" >
+| < K_CONVERT : "CONVERT" >
+| < K_TO : "TO" >
+| < K_CONVERT_TO : "CONVERT_TO">
+| < K_AND : "AND" >
+| < K_OR : "OR" >
+| < K_VARCHAR2 : "VARCHAR2" >
+| < K_NUMBER : "NUMBER" >
+| < K_DISTINCT : "DISTINCT" >
+| < K_ANY : "ANY" >
+| < K_ALL : "ALL" >
+| < K_START : "START" >
+| < K_CONNECT : "CONNECT" >
+| < K_WITH : "WITH" >
+| < K_BY : "BY" >
+| < K_GROUP : "GROUP" >
+| < K_ORDER : "ORDER" >
+| < K_HAVING : "HAVING" >
+| < K_MINUS : "MINUS" >
+| < K_INTERSECT : "INTERSECT" >
+| < K_UNION : "UNION" >
+| < K_ASC : "ASC" >
+| < K_DESC : "DESC" >
+| < K_FOR : "FOR" >
+| < K_NOT : "NOT" >
+| < K_EXISTS : "EXISTS" >
+| < K_PRIOR : "PRIOR" >
+| < K_IS : "IS" >
+| < K_JOIN : "JOIN" >
+| < K_ON : "ON" >
+| < K_USING : "USING" >
+| < K_FULL : "FULL" >
+| < K_LEFT : "LEFT" >
+| < K_RIGHT : "RIGHT" >
+| < K_INNER : "INNER" >
+| < K_OUTER : "OUTER" >
+}
+
+TOKEN : /* Numeric Constants */
+{
+	< S_NUMBER : < FLOAT >
+	    | < FLOAT > ( ["e","E"] ([ "-","+"])? < FLOAT > )?
+    	>
+  | 	< #FLOAT: < INTEGER >
+	    | <INTEGER> ( "." < INTEGER > )?
+	    | "." < INTEGER >
+    	>
+  | 	< #INTEGER: ( < DIGIT > )+ >
+  | 	< #DIGIT: ["0" - "9"] >
+}
+
+TOKEN:
+{
+	< S_IDENTIFIER: ( < LETTER > )+ ( < DIGIT > | < LETTER > |< SPECIAL_CHARS >)* >
+| 	< #LETTER: ["a"-"z", "A"-"Z"] >
+|   < #SPECIAL_CHARS: "$" | "_">
+|   < S_BIND: ":" < S_IDENTIFIER > ("." < S_IDENTIFIER >)? >
+|   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
+|   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" >
+}
+
+/**
+ * An M-SQL document consists of multiple M-SQL blocks.
+ * The MSQLDocument class is the root of the AST.
+ */
+ASTSQLMDocument Start() #SQLMDocument :
+{}
+{
+  (
+    Statement() //";"
+  )*
+  {
+    return jjtThis;
+  }
+}
+
+/* data types */
+
+/**
+ * The data length indicates the number of bytes of a variable.
+ */
+void DataLength() #DataLength :
+{
+  Token t;
+}
+{
+  t = < S_NUMBER >
+  {
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+/**
+ * The data scale is the number of digits after the floating point.
+ */
+void DataScale() #DataScale :
+{
+  Token t;
+}
+{
+  t = < S_NUMBER >
+  {
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+/**
+ * Common SQL data types are available in M-SQL as well.
+ * There is no DataType node class. Instead, the concrete
+ * data types are stored as a node in the AST.
+ * TODO: Future implementations of M-SQL should also
+ *       support user-defined types.
+ */
+void DataType() :
+{}
+{
+  (
+    Varchar2Type()
+  | NumberType()
+  | UserDefinedType()
+  )
+}
+
+void UserDefinedType() #UserDefinedType :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+/**
+ * Varchar2Type represents the SQL VARCHAR2 data type.
+ */
+void Varchar2Type() #Varchar2Type :
+{
+  Token t;
+}
+{
+  t = "VARCHAR2" "(" DataLength() ")"
+  {
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+/**
+ * NumberType represents the SQL VARCHAR2 data type.
+ */
+void NumberType() #NumberType :
+{
+  Token t;
+}
+{
+	t = "NUMBER" ( "(" DataLength() ("," DataScale())? ")" )?
+	{
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+
+/* values */
+
+/**
+ * Values are organized into String and number values.
+ * These two generic types are used for all variations in SQL.
+ */
+void Value() :
+{}
+{
+  (
+    StringValue()
+  | NumberValue()
+  | LOOKAHEAD(2)(MultilevelObjectQualifiedID())
+  | LOOKAHEAD(2)(ObjectCollectionConstructor())
+  | LOOKAHEAD(2)(ObjectConstructor())
+  )
+}
+
+void ObjectCollectionConstructor() #ObjectCollectionConstructor:
+{
+  Token t;
+  StringBuffer sb = new StringBuffer();
+}
+{
+  {
+    // remember current token
+    t = getToken(0);
+  }
+  UserDefinedType() "(" ObjectConstructorList() ")"
+  {
+    // get the string value of this production rule
+    // future implementations may do more with this type
+    while(t != null)
+    {
+      sb.append(t.image);
+      t = t.next;
+    }
+
+    // this string can be used as-is for the translation into PL/SQL
+	jjtThis.jjtSetValue(sb.toString());
+  }
+}
+
+void ObjectConstructorList() #ObjectConstructorList:
+{}
+{
+  ObjectConstructor() ("," ObjectConstructor())*
+}
+
+void ObjectConstructor() #ObjectConstructor:
+{
+  Token t;
+  StringBuffer sb = new StringBuffer();
+}
+{
+  {
+    // remember current token
+    t = getToken(0);
+  }
+  UserDefinedType() "(" ObjectAttributeList() ")"
+  {
+    // get the string value of this production rule
+    // future implementations may do more with this type
+    while(t != null)
+    {
+      sb.append(t.image);
+      t = t.next;
+    }
+
+    // this string can be used as-is for the translation into PL/SQL
+	jjtThis.jjtSetValue(sb.toString());
+  }
+}
+
+void ObjectAttributeList() #ObjectAttributeList:
+{}
+{
+  Value() ("," Value())*
+}
+
+/**
+ * The StringValue class stores a string literal in the 
+ * node's generic value attribute.
+ */
+
+void StringValue() #StringValue:
+{
+  Token t;
+}
+{
+  t = < S_CHAR_LITERAL >
+  {
+    // use the generic value attribute of the node.
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+/**
+ * The NumberValue class stores the string
+ * representation of an integer or a real
+ * number in the node's generic value attribute.
+ */
+
+void NumberValue() #NumberValue:
+{
+  Token t;
+  StringBuffer sb = new StringBuffer();
+}
+{
+  t = < S_NUMBER >
+  {
+    sb.append(t.image);
+	jjtThis.jjtSetValue(sb.toString());
+  }
+}
+
+void MultilevelObjectAttributeValue() :
+{}
+{
+  Value()
+}
+
+void MultilevelFactMeasureValue() :
+{}
+{
+  (
+    Value()
+  | AggregationFunction()
+  )
+}
+
+void AggregationFunction() #AggregationFunction :
+{
+  Token t;
+}
+{
+  (
+    t = "SUM" |
+    t = "AVG" |
+    t = "MIN" |
+    t = "MAX" |
+    t = "SET_UNION"
+  )
+  {
+    jjtThis.jjtSetValue(t.image);
+  }  
+}
+
+/**
+ * This class represents the DEFAULT flag, which
+ * indicates that the value that was set is a default
+ * value. If a DEFAULT node is in the tree, it signifies
+ * that the value that is assigned is a default value.
+ * This node holds no value.
+ */
+
+void Default() #Default :
+{}
+{
+  "DEFAULT"
+}
+
+/**
+ * This class represents the SHARED flag, which
+ * indicates that the value that was set is a shared
+ * value. If a SHARED node is in the tree, it signifies
+ * that the value that is assigned is a shared value.
+ * This is the default setting.
+ * This node holds no value.
+ */
+void Shared() #Shared :
+{}
+{
+  "SHARED"
+}
+
+void DimensionHierarchyID() #DimensionHierarchyID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+void MultilevelObjectID() #MultilevelObjectID :
+{}
+{
+
+  //( LOOKAHEAD(2) MultilevelObjectUnqualifiedIDList() | MultilevelObjectQualifiedIDList() )
+
+  MultilevelObjectUnqualifiedID()
+  (
+    "IN" ("DIMENSION")?
+    DimensionHierarchyID()
+  )?
+}
+
+void MultilevelObjectQualifiedID() #MultilevelObjectQualifiedID :
+{}
+{
+  MultilevelObjectUnqualifiedID() "IN" ("DIMENSION")? DimensionHierarchyID()
+}
+
+void MultilevelObjectUnqualifiedID() #MultilevelObjectUnqualifiedID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void MultilevelObjectIDList() :
+{}
+{
+  ( LOOKAHEAD(2) MultilevelObjectQualifiedIDList() | MultilevelObjectUnqualifiedIDList() )
+  //MultilevelObjectID() ("," MultilevelObjectID())*
+}
+
+void MultilevelObjectUnqualifiedIDList() :
+{}
+{
+  MultilevelObjectUnqualifiedID() ("," MultilevelObjectUnqualifiedID())*
+}
+
+void MultilevelObjectQualifiedIDList() :
+{}
+{
+  MultilevelObjectQualifiedID() ("," MultilevelObjectQualifiedID())*
+}
+
+void MultilevelObjectLevelID() #MultilevelObjectLevelID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void MultilevelObjectLevelIDList() :
+{}
+{
+  MultilevelObjectLevelID() |
+  (
+    "(" MultilevelObjectLevelID()
+    ("," MultilevelObjectLevelID())*
+    ")"
+  )
+}
+
+void MultilevelObjectAttributeID() #MultilevelObjectAttributeID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void MultilevelCubeID() #MultilevelCubeID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void MultilevelFactID() #MultilevelFactID :
+{}
+{
+  MultilevelCubeCoordinate() "IN" ("CUBE")? MultilevelCubeID()
+}
+
+void MultilevelFactConnectionLevelID() #MultilevelFactConnectionLevelID :
+{}
+{
+  MultilevelObjectLevelID() ("," MultilevelObjectLevelID())*
+}
+
+void MultilevelFactMeasureID() #MultilevelFactMeasureID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void MetalevelID() #MetalevelID :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+/**********/
+
+void Statement() :
+{}
+{
+  (DDLStatement() | DMLStatement() | DQLStatement() ) ";"
+}
+ 
+
+void Block() #Block :
+{}
+{
+  /* A block has an arbitrary number of statements. */
+  "BEGIN"
+  (
+    Statement()
+  )*
+  "END"
+}
+
+void DDLStatement() :
+{}
+{
+  (
+    CreateStatement()
+  | AlterStatement()
+  | DropStatement()
+  )
+}
+
+void DMLStatement() :
+{}
+{
+  UpdateStatement()
+}
+
+/********* CREATE **********/
+void CreateStatement() :
+{}
+{
+  "CREATE"
+  (
+    CreateDimension()
+  | CreateMultilevel()
+  )
+}
+
+  /***** CREATE DIMENSION *****/
+void CreateDimension() :
+{}
+{
+  "DIMENSION"
+  (
+    CreateDimensionHierarchy()
+  )
+}
+
+void CreateDimensionHierarchy() #CreateDimensionHierarchy :
+{Token t;}
+{
+  "HIERARCHY" DimensionHierarchyID()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void CreateMultilevelObject() #CreateMultilevelObject :
+{Token t;}
+{
+  "OBJECT" MultilevelObjectQualifiedID()
+  "AT" ("LEVEL")? MultilevelObjectLevelID()
+  ( "UNDER" MultilevelObjectParents() )?
+  ( MultilevelObjectLevelHierarchy() )?
+  ( MultilevelObjectAttributeValueBlock() )?
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void MultilevelObjectParents() #MultilevelObjectParents :
+{}
+{
+  MultilevelObjectUnqualifiedIDList()
+}
+
+void MultilevelObjectLevelHierarchy() #MultilevelObjectLevelHierarchy :
+{}
+{
+  "HIERARCHY" "("
+    MultilevelObjectLevelList()
+  ")"
+}
+
+void MultilevelObjectLevelList() :
+{}
+{
+  MultilevelObjectLevelDefinition() ("," MultilevelObjectLevelDefinition())*
+}
+
+void MultilevelObjectLevelDefinition() #MultilevelObjectLevelDefinition :
+{}
+{
+  "LEVEL" MultilevelObjectLevelID()
+  "CHILD" "OF" MultilevelObjectLevelParentLevels()
+  ("(" MultilevelObjectLevelAttributeList() ")")?
+}
+
+void MultilevelObjectLevelParentLevels() #MultilevelObjectLevelParentLevels :
+{}
+{
+  ("NULL" | MultilevelObjectLevelIDList())
+}
+
+void MultilevelObjectLevelAttributeList() :
+{}
+{
+  MultilevelObjectLevelAttribute() ("," MultilevelObjectLevelAttribute())*
+}
+
+void MultilevelObjectLevelAttribute() #MultilevelObjectLevelAttribute :
+{}
+{
+  MultilevelObjectAttributeID() DataType()
+}
+
+
+  /***** CREATE CUBE *****/
+void CreateMultilevel() :
+{}
+{
+  "MULTILEVEL"
+  (
+    CreateMultilevelObject()
+  | CreateMultilevelCube()
+  | CreateMultilevelFact()
+  )
+}
+
+
+void CreateMultilevelCube() #CreateMultilevelCube :
+{Token t;}
+{
+  "CUBE" MultilevelCubeID()
+  "OF" "DIMENSIONS" MultilevelObjectQualifiedIDList()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void MultilevelCubeCoordinate() #MultilevelCubeCoordinate :
+{}
+{
+  "(" MultilevelObjectIDList() ")"
+}
+
+void CreateMultilevelFact() #CreateMultilevelFact :
+{Token t;}
+{
+  "FACT" "BETWEEN" ("OBJECTS")? MultilevelFactID()
+  (MultilevelFactConnectionLevelHierarchy())?
+  (MultilevelFactMeasureValueBlock())?
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void MultilevelFactConnectionLevelHierarchy() #MultilevelFactConnectionLevelHierarchy :
+{}
+{
+  "HIERARCHY" "("
+    MultilevelFactConnectionLevelList()
+  ")"
+}
+
+void MultilevelFactConnectionLevelList() :
+{}
+{
+  MultilevelFactConnectionLevelDefinition() ("," MultilevelFactConnectionLevelDefinition())*
+}
+
+void MultilevelFactConnectionLevelDefinition() #MultilevelFactConnectionLevelDefinition : //"<" MultilevelFactConnectionLevelID() ">"
+{}
+{
+  "CONNECTION" "LEVEL" "<" MultilevelFactConnectionLevelID() ">"
+  ("(" MultilevelFactConnectionLevelMeasureList() ")")?
+}
+
+void MultilevelFactConnectionLevelMeasureList() :
+{}
+{
+  MultilevelFactConnectionLevelMeasure() ("," MultilevelFactConnectionLevelMeasure())*
+}
+
+void MultilevelFactConnectionLevelMeasure() #MultilevelFactConnectionLevelMeasure :
+{}
+{
+  MultilevelFactMeasureID() DataType()
+}
+
+/***************************/
+
+/********* ALTER **********/
+
+void AlterStatement() :
+{}
+{
+  "ALTER" AlterMultilevel() //| AlterCube()
+}
+
+  /***** ALTER DIMENSION *****/
+void AlterMultilevel() :
+{}
+{
+  "MULTILEVEL"
+  (
+    AlterMultilevelObject()
+  | AlterMultilevelFact()
+  )
+}
+
+void AlterMultilevelObject() #AlterMultilevelObject :
+{Token t;}
+{
+  "OBJECT" MultilevelObjectQualifiedID()
+  (
+    AlterMultilevelObjectAddAttribute()
+  | AlterMultilevelObjectDropAttribute()
+  )*
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void AlterMultilevelObjectAddAttribute() #AlterMultilevelObjectAddAttribute :
+{}
+{
+  "ADD" ("ATTRIBUTE")? MultilevelObjectAttributeList()
+}
+
+void AlterMultilevelObjectDropAttribute() #AlterMultilevelObjectDropAttribute :
+{}
+{
+  "DROP" ("ATTRIBUTE")? MultilevelObjectAttributeID()
+}
+
+void MultilevelObjectAttributeList() :
+{}
+{
+  MultilevelObjectLevelAttribute() ("," MultilevelObjectLevelAttribute())*
+  "AT" ("LEVEL")? MultilevelObjectLevelID()
+}
+
+  
+  /***** ALTER CUBE *****/
+void AlterCube() :
+{}
+{
+  "MULTILEVEL" 
+}
+
+void AlterMultilevelFact() #AlterMultilevelFact :
+{Token t;}
+{
+  "FACT" "BETWEEN" "OBJECTS" MultilevelFactID()
+  (
+    AlterMultilevelFactAddMeasure()
+  | AlterMultilevelFactDropMeasure()
+  )+
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void AlterMultilevelFactAddMeasure() #AlterMultilevelFactAddMeasure :
+{}
+{
+  "ADD" ("MEASURE")? MultilevelFactMeasureList()
+}
+
+void AlterMultilevelFactDropMeasure() #AlterMultilevelFactDropMeasure :
+{}
+{
+  "DROP" ("MEASURE")? MultilevelFactMeasureID()
+}
+
+void MultilevelFactMeasureList() : //"<" MultilevelFactConnectionLevelID() ">"
+{}
+{
+  MultilevelFactConnectionLevelMeasure() ("," MultilevelFactConnectionLevelMeasure())*
+  "AT" ("CONNECTION" "LEVEL")? "<" MultilevelFactConnectionLevelID() ">"
+}
+
+/*************************/
+
+
+/********* DROP **********/
+
+void DropStatement() :
+{}
+{
+  "DROP"
+  (
+    DropDimension()
+  | DropMultilevel()
+  ) 
+}
+
+  /***** DROP DIMENSION *****/
+
+void DropDimension() :
+{}
+{
+  "DIMENSION"
+  (
+    DropDimensionHierarchy()
+  )
+}
+
+void DropDimensionHierarchy() #DropDimensionHierarchy :
+{Token t;}
+{
+  "HIERARCHY" DimensionHierarchyID()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void DropMultilevelObject() #DropMultilevelObject :
+{Token t;}
+{
+  "OBJECT" MultilevelObjectQualifiedID()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void DropMultilevel() :
+{}
+{
+  "MULTILEVEL"
+  (
+    DropMultilevelObject()
+  | DropMultilevelCube()
+  | DropMultilevelFact()
+  )
+}
+
+  /***** DROP CUBE *****/
+
+void DropMultilevelCube() #DropMultilevelCube :
+{Token t;}
+{
+  "CUBE" MultilevelCubeID()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void DropMultilevelFact() #DropMultilevelFact :
+{Token t;}
+{
+  "FACT" "BETWEEN" "OBJECTS" MultilevelFactID()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+/***************************/
+
+
+/********* UPDATE **********/
+
+void UpdateStatement() :
+{}
+{
+  "UPDATE" UpdateMultilevel() 
+
+}
+
+void UpdateMultilevel() :
+{}
+{
+  "MULTILEVEL"
+  (
+    UpdateMultilevelObject()
+  | UpdateMultilevelFact()
+  )
+}
+
+void UpdateMultilevelObject() #UpdateMultilevelObject :
+{Token t;}
+{
+  "OBJECT" MultilevelObjectQualifiedID() MultilevelObjectAttributeValueBlock()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void MultilevelObjectAttributeValueAssignment() #MultilevelObjectAttributeValueAssignment :
+{}
+{
+  MultilevelObjectAttributeID() ("." MetalevelID())? "="
+  MultilevelObjectAttributeValue() (Default() | Shared())?
+}
+
+void UpdateMultilevelFact() #UpdateMultilevelFact :
+{Token t;}
+{
+  "FACT" "BETWEEN" "OBJECTS" MultilevelFactID() MultilevelFactMeasureValueBlock()
+  {
+    t = getToken(0);
+    jjtThis.jjtSetErrorLine(t.endLine);
+  }
+}
+
+void MultilevelFactMeasureValueAssignment() #MultilevelFactMeasureValueAssignment :
+{}
+{
+  MultilevelFactMeasureID() ("." MetalevelID())? "="
+  MultilevelFactMeasureValue() (Default() | Shared())?
+}
+
+  /***** BULK Statements *****/
+
+void BulkCreateMultilevelObject() #BulkCreateMultilevelObject :
+{}
+{
+  "BULK"
+}
+
+void BulkUpdateMultilevelObject() #BulkUpdateMultilevelObject :
+{}
+{
+  (BulkUpdateMultilevelObjectBlock())*
+}
+
+void BulkUpdateMultilevelObjectBlock() #BulkUpdateMultilevelObjectBlock :
+{}
+{
+  "BULK"
+}
+
+void BulkCreateMultilevelFact() #BulkCreateMultilevelFact :
+{}
+{
+  "BULK"
+}
+
+void BulkUpdateMultilevelFact() #BulkUpdateMultilevelFact :
+{}
+{
+  (BulkUpdateMultilevelFactBlock())*
+}
+
+void BulkUpdateMultilevelFactBlock() #BulkUpdateMultilevelFactBlock :
+{}
+{
+  "BULK"
+}
+
+void MultilevelObjectAttributeValueBlock() #MultilevelObjectAttributeValueBlock :
+{}
+{
+  "SET" MultilevelObjectAttributeValueAssignment() ("," MultilevelObjectAttributeValueAssignment())*
+}
+
+void MultilevelFactMeasureValueBlock() #MultilevelFactMeasureValueBlock :
+{}
+{
+  "SET" MultilevelFactMeasureValueAssignment() ("," MultilevelFactMeasureValueAssignment())*
+}
+
+/********* QUERY **********/
+
+void DQLStatement() :
+{}
+{
+  /**(LOOKAHEAD(2)(ClosedMCubeQuery()) | SQLSelectStatement())**/
+  SQLSelectStatement())
+}
+
+void ClosedMCubeQuery() #ClosedMCubeQuery() :
+{}
+{
+  "SELECT"
+  "MULTILEVEL" ProjectionBlock()
+  "FROM" ( DiceBlock() | CubeBlock() )
+  (
+    "WHERE" SliceBlock()
+  )?
+}
+
+void DiceBlock() #DiceBlock :
+{}
+{
+  "DICE" "[" DiceMultilevelObjectIDList() "]" "(" InputCubeBlock() ")" (CubeAlias())?
+}
+
+void CubeBlock() #CubeBlock :
+{}
+{
+  ( MultilevelCubeID() (CubeAlias())? ) | ( "(" ClosedMCubeQuery() ")" (CubeAlias())? )
+}
+
+void DiceMultilevelObjectIDList() #DiceMultilevelObjectIDList :
+{}
+{
+  MultilevelObjectIDList()
+}
+
+void InputCubeBlock() #InputCubeBlock :
+{}
+{
+  MultilevelCubeID() | ClosedMCubeQuery()
+}
+
+void SliceBlock() #SliceBlock :
+{}
+{
+  ( SliceExpression() | SliceConversionExpression() )
+  ("AND" ( SliceExpression() | SliceConversionExpression() ))*
+}
+
+void SliceExpression() #SliceExpression :
+{}
+{
+  SliceExpressionPath() ComparisonOperator() Value()
+}
+
+void ProjectionBlock() #ProjectionBlock :
+{}
+{
+  ( (LOOKAHEAD(2) CubeAlias()".")? MultilevelFactMeasureID()
+  	("," (LOOKAHEAD(2) CubeAlias()".")? MultilevelFactMeasureID())* ) | "*"
+}
+
+void CubeAlias() #CubeAlias :
+{
+  Token t;
+}
+{
+  t = < S_IDENTIFIER >
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+}
+
+void SliceExpressionPath() #SliceExpressionPath :
+{}
+{
+  (LOOKAHEAD(2) CubeAlias()".")? DimensionHierarchyID()"."MultilevelObjectLevelID()"."MultilevelObjectAttributeID()
+}
+
+void RollupExpression() #RollupExpression :
+{}
+{
+  "ROLLUP" 
+  "[" MeasureLevelPathList() "]" "(" InputCubeBlock() ")"
+  ( RollupUnitConversionList() )?
+}
+
+void MeasureLevelPathList() #MeasureLevelPathList :
+{}
+{
+  MeasureLevelPath() ("," MeasureLevelPath())*
+}
+
+
+void MeasureLevelPath() #MeasureLevelPath :
+{}
+{
+  DimensionHierarchyID() "." MultilevelObjectLevelID()
+}
+
+void RollupUnitConversionList() #RollupUnitConversionList :
+{}
+{
+   "CONVERT" ("MEASURE")? RollupUnitConversion() (LOOKAHEAD(2) "," RollupUnitConversion())*
+}
+
+void RollupUnitConversion() #RollupUnitConversion :
+{}
+{
+   MultilevelFactMeasureIdList() "TO" MeasureUnit() "USING" MeasureUnitConversionRule()
+}
+
+void MultilevelFactMeasureIdList() #MultilevelFactMeasureIdList :
+{}
+{
+   MultilevelFactMeasureID() ("," MultilevelFactMeasureID())*
+}
+
+void MeasureUnit() #MeasureUnit :
+{}
+{
+  NumberValue()
+  | StringValue()
+  | MultilevelObjectQualifiedID()
+}
+
+void MeasureUnitConversionRule() #MeasureUnitConversionRule :
+{}
+{
+  MultilevelCubeID()
+}
+
+void SliceConversionExpression() #SliceConversionExpression :
+{}
+{
+  "CONVERT_TO" "(" SliceExpressionPath() "," AttributeUnit() "," AttributeUnitConversionRule() ")"
+  ComparisonOperator() Value()
+}
+
+void AttributeUnit() #AttributeUnit :
+{}
+{
+  StringValue()
+  | MultilevelObjectQualifiedID() 
+}
+
+void AttributeUnitConversionRule() #AttributeUnitConversionRule :
+{}
+{
+  MultilevelCubeID()
+}
+
+void ComparisonOperator() #ComparisonOperator :
+{
+  Token t;
+}
+{
+  (
+    t = "="
+  {
+    jjtThis.jjtSetValue(t.image);    
+  } |
+  t =  ">"
+  {
+    jjtThis.jjtSetValue(t.image);    
+  } |
+  t =  ">="
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }|
+  t =  "<"
+  {
+    jjtThis.jjtSetValue(t.image);    
+  } |
+  t =  "<="
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }|
+  t =  "LIKE"
+  {
+    jjtThis.jjtSetValue(t.image);    
+  }
+  )
+}
+
+
+/********************************************************************************/
+/********************************************************************************/
+/* --------------------------- SQL Grammar ------------------------------------ */
+/* Adapted from http://java.net/downloads/javacc/contrib/grammars/FormsPlSql.jj */
+/* and http://java.net/downloads/javacc/contrib/grammars/PlSql.jj               */
+/********************************************************************************/
+/********************************************************************************/
+
+void TableColumn():
+{}
+{
+    // user.table.column
+    OracleObjectName() [ "." OracleObjectName() ["." OracleObjectName()]]
+}
+
+void OracleObjectName():
+{}
+{
+    <S_IDENTIFIER> | <S_QUOTED_IDENTIFIER>
+}
+
+void TableReference():
+{}
+{
+    OracleObjectName() ["." OracleObjectName()]
+}
+
+void NumOrID():
+{}
+{
+    <S_IDENTIFIER> | (["+" | "-"] <S_NUMBER>)
+}
+
+
+void SQLSelectStatement() #SQLSelectStatement :
+{
+  Token cur;
+  StringBuffer sb = new StringBuffer();
+}
+{
+    {
+      cur = getToken(1);
+    }
+    
+    SelectWithoutOrder()
+    [ OrderByClause() ]
+    [ ForUpdateClause() ]
+
+    {
+      for(; cur != null; cur = cur.next){
+        sb.append(cur.image + " ");
+      }
+    
+      jjtThis.jjtSetValue(sb.toString());
+    }
+}
+
+void SelectWithoutOrder():
+{}
+{
+    "SELECT"
+    [ "ALL" | "DISTINCT" ] SelectList()
+    FromClause()
+    [ WhereClause() ]
+    [ ConnectClause() ]
+    [ GroupByClause() ]
+    [ SetClause() ]
+}
+
+
+/* Checks for whatever follows  SELECT */
+void SelectList():
+{}
+{
+    "*" | SelectItem() ("," SelectItem())*
+}
+
+void SelectItem():
+{}
+{
+    LOOKAHEAD(2)
+    OracleObjectName()".*"  /* table.* */
+|   LOOKAHEAD(4)
+    OracleObjectName()"." OracleObjectName() ".*" /* schema.table.* */
+|   LOOKAHEAD(2)(SQLSimpleExpression())    // Column or Expression
+|   "(" SubQuery() ")"
+    [<S_IDENTIFIER>] // Column Alias
+}
+
+void FromClause():
+{}
+{
+    "FROM" FromItem() ( "," FromItem())*
+}
+
+void FromItem():
+{
+  Token t;
+}
+{
+  (
+    (
+      TableReference() (Join())*
+    ) |
+    (
+      "(" SubQuery() ")"
+    ) |
+    (
+		{
+		  t = getToken(1);
+	    }
+	    
+	    RollupExpression()
+	    
+	    {
+	      // The token that holds the ROLLUP keyword shall point
+	      // to the first token after the RollupExpression production.
+	      // When later the SQL string is built, only the standard
+	      // SQL code is included, and the ROLLUP keyword can be
+	      // replaced by a table name.
+	      t.next = getToken(1);
+	    }
+    )
+  )
+  [ <S_IDENTIFIER> ]        /** Alias Name **/
+}
+
+
+void WhereClause():
+{}
+{
+    "WHERE" SQLExpression()
+}
+
+void ConnectClause():
+{}
+{
+    // The following grammar will take 2 "START WITH" expressions
+    // which is not correct. But alright, because only valid statements
+    // will be given.
+   (["START" "WITH" SQLExpression()] "CONNECT" "BY" SQLExpression()
+    ["START" "WITH" SQLExpression()])
+}
+
+void GroupByClause():
+{}
+{
+    "GROUP" "BY" SQLExpressionList()
+    ["HAVING" SQLExpression()]
+}
+
+void SetClause():
+{}
+{
+    (("UNION" ["ALL"]) | "INTERSECT" | "MINUS")
+    // LOOKAHEAD("(") because Oracle supports "(" after a UNION
+    (LOOKAHEAD("(") ("(" SelectWithoutOrder() ")")
+        | SelectWithoutOrder()
+    )
+}
+
+void OrderByClause():
+{}
+{
+    "ORDER" "BY" SQLSimpleExpression() ["ASC" | "DESC" ]
+        ("," SQLSimpleExpression() ["ASC" | "DESC"])*
+}
+
+void ForUpdateClause():
+{}
+{
+    "FOR" "UPDATE" "OF" TableColumn() ("," TableColumn())*
+}
+
+void SQLExpression():
+{}
+{
+    SQLAndExpression() ("OR" SQLAndExpression())*
+}
+
+void SQLAndExpression():
+{}
+{
+    SQLUnaryLogicalExpression() ( "AND" SQLUnaryLogicalExpression())*
+}
+
+void SQLUnaryLogicalExpression():
+{}
+{
+    LOOKAHEAD(2) ExistsClause()
+|   (["NOT"] SQLRelationalExpression())
+}
+
+void ExistsClause():
+{}
+{
+    ["NOT"] "EXISTS" "(" SubQuery() ")"
+}
+
+void SQLRelationalExpression():
+{}
+{
+    /* Only after looking past "(", Expression() and "," we will know that
+       it is expression list */
+
+    (LOOKAHEAD("(" SQLSimpleExpression() ",")
+     "(" SQLExpressionList() ")"
+|
+    (["PRIOR"] SQLSimpleExpression()))
+
+    /* Lookahead(2) is required because of NOT IN,NOT BETWEEN and NOT LIKE */
+   ( LOOKAHEAD(2)(SQLRelationalOperatorExpression())
+                                    |  LOOKAHEAD(2) (SQLInClause())
+                                    |  LOOKAHEAD(2) (SQLBetweenClause())
+                                    |  LOOKAHEAD(2) (SQLLikeClause())
+                                    |  IsNullClause()
+   )?
+}
+
+void IsNullClause():
+{}
+{
+    "IS" ["NOT"] "NULL"
+}
+
+void SQLExpressionList():
+{}
+{
+    SQLSimpleExpression() ("," SQLSimpleExpression())*
+}
+
+void SQLRelationalOperatorExpression():
+{}
+{
+
+    ComparisonOperator()
+
+    /* Only after seeing an ANY/ALL or "(" followed by a SubQuery() we can
+    determine that is is a sub-query
+    */
+    (   LOOKAHEAD("ANY" | "ALL" | "(" "SELECT")
+        (["ALL" | "ANY"] "(" SubQuery() ")")
+        |
+        ["PRIOR"] SQLSimpleExpression()
+    )
+}
+
+void SQLInClause():
+{}
+{
+    ["NOT"] "IN" "(" (LOOKAHEAD(2)(SQLExpressionList()) | SubQuery()) ")"
+}
+
+void SQLBetweenClause():
+{}
+{
+    ["NOT"] "BETWEEN" SQLSimpleExpression() "AND" SQLSimpleExpression()
+}
+
+void SQLLikeClause():
+{}
+{
+    ["NOT"] "LIKE" SQLSimpleExpression()
+}
+
+void SQLSimpleExpression():
+{}
+{
+    SQLMultiplicativeExpression() ( ("+" | "-" | "||") SQLMultiplicativeExpression())*
+}
+
+
+void SQLMultiplicativeExpression():
+{}
+{
+    SQLExpotentExpression() ( ("*" | "/") SQLExpotentExpression())*
+}
+
+void SQLExpotentExpression():
+{}
+{
+    SQLUnaryExpression() ( "**" SQLUnaryExpression())*
+}
+
+void SQLUnaryExpression():
+{}
+{
+    ["+" | "-"] SQLPrimaryExpression()
+}
+
+
+void SQLPrimaryExpression():
+{}
+{
+
+    "NULL"
+|    LOOKAHEAD(FunctionCall()) FunctionCall()
+|    LOOKAHEAD(OuterJoinExpression()) OuterJoinExpression()
+|    TableColumn()
+|   < S_NUMBER >
+|   < S_CHAR_LITERAL >
+|   < S_BIND >
+|   "(" SQLExpression() ")"
+}
+
+void FunctionCall():
+{}
+{
+    // caters the following
+    // function(args)
+    // package.function(args)
+    // user.package.function(args)
+
+    // however note that "distinct/all/*" can be only used with
+    // inbuilt functions but no distinction is made between inbuilt
+    // function and custom functions
+
+    OracleObjectName() [ "." OracleObjectName() ["." OracleObjectName()]]
+    "(" [ ["DISTINCT" | "ALL"] (SQLArguments() | "*") ] ")"
+}
+
+void SQLArguments():
+{}
+{
+    SQLExpressionList()
+}
+
+void Join():
+{}
+{
+    JoinType() "JOIN" TableReference() ("ON" SQLExpression() | "USING" "(" TableColumn() ("," TableColumn())* ")")
+}
+
+void JoinType():
+{}
+{
+    "INNER"
+  | (("LEFT" | "RIGHT" | "FULL") "OUTER")
+}
+
+void OuterJoinExpression():
+{}
+{
+    // user.table.col
+    OracleObjectName() [ "." OracleObjectName() ["." OracleObjectName()]]
+    "(" "+" ")"
+}
+
+void SubQuery():
+{}
+{
+    SelectWithoutOrder()
+}
