@@ -1,5 +1,4 @@
-# HH-DW
-The Hetero-Homogeneous Data Warehouse Project (HH-DW)
+# The Hetero-Homogeneous Data Warehouse Project (HH-DW)
 
 Copyright (C) 2010-2015 Department of Business Informatics -- Data & Knowledge Engineering
 
