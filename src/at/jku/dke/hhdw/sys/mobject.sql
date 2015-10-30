@@ -322,6 +322,13 @@ CREATE OR REPLACE TYPE dimension_ty AS OBJECT (
                                          level_hierarchy level_hierarchy_tty),
     
       -- TO BE OVERRIDDEN!
+    MEMBER PROCEDURE bulk_create_mobject(onames          names_tty,
+                                         ids             names_tty,
+                                         top_level       VARCHAR2,
+                                         parents         mobject_trty,
+                                         level_hierarchy level_hierarchy_tty),
+    
+      -- TO BE OVERRIDDEN!
     MEMBER PROCEDURE bulk_set_attribute(attribute_name   VARCHAR2,
                                         attribute_values mobject_value_tty),
       

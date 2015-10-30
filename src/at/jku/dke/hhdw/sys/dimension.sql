@@ -232,6 +232,12 @@ CREATE OR REPLACE PACKAGE BODY DIMENSION AS
             '                                                    parents mobject_trty,' || chr(10) || 
             '                                                    level_hierarchy level_hierarchy_tty),' || chr(10) || 
             '    ' || chr(10) ||
+            '    OVERRIDING MEMBER PROCEDURE bulk_create_mobject(onames names_tty,' || chr(10) || 
+            '                                                    ids names_tty,' || chr(10) || 
+            '                                                    top_level VARCHAR2,' || chr(10) || 
+            '                                                    parents mobject_trty,' || chr(10) || 
+            '                                                    level_hierarchy level_hierarchy_tty),' || chr(10) || 
+            '    ' || chr(10) ||
             '    OVERRIDING MEMBER PROCEDURE bulk_set_attribute(attribute_name   VARCHAR2,' || chr(10) ||
             '                                                   attribute_values mobject_value_tty),' || chr(10) ||
             '    ' || chr(10) ||
@@ -526,6 +532,23 @@ CREATE OR REPLACE PACKAGE BODY DIMENSION AS
             '        i INTEGER;' || chr(10) ||
             '        ' || chr(10) ||
             '        ids names_tty;' || chr(10) ||
+            '    BEGIN' || chr(10) ||
+            '        -- this collection holds the surrogate ids' || chr(10) ||
+            '        ids := names_tty();' || chr(10) ||
+            '        FOR i IN 1 .. onames.COUNT LOOP' || chr(10) ||
+            '            ids.EXTEND;' || chr(10) ||
+            '            ids(ids.LAST) := ''o'' || ' || mobject_id_seq || '.NEXTVAL;' || chr(10) ||
+            '        END LOOP;' || chr(10) ||
+            '        ' || chr(10) ||
+            '        SELF.bulk_create_mobject(onames, ids, top_level, parents, level_hierarchy);' || chr(10) ||
+            '    END;' || chr(10) ||
+            '    ' || chr(10) ||
+            '    OVERRIDING MEMBER PROCEDURE bulk_create_mobject(onames names_tty,' || chr(10) || 
+            '                                                    ids    names_tty,' || chr(10) ||
+            '                                                    top_level VARCHAR2,' || chr(10) || 
+            '                                                    parents mobject_trty,' || chr(10) || 
+            '                                                    level_hierarchy level_hierarchy_tty) IS' || chr(10) ||
+            '        i INTEGER;' || chr(10) ||
             '        ' || chr(10) ||
             '        ancestors level_ancestor_tty;' || chr(10) ||
             '        ' || chr(10) ||
@@ -541,13 +564,6 @@ CREATE OR REPLACE PACKAGE BODY DIMENSION AS
             '        ' || chr(10) ||
             '        specializes INTEGER;' || chr(10) ||
             '    BEGIN' || chr(10) ||
-            '        -- this collection holds the surrogate ids' || chr(10) ||
-            '        ids := names_tty();' || chr(10) ||
-            '        FOR i IN 1 .. onames.COUNT LOOP' || chr(10) ||
-            '            ids.EXTEND;' || chr(10) ||
-            '            ids(ids.LAST) := ''o'' || ' || mobject_id_seq || '.NEXTVAL;' || chr(10) ||
-            '        END LOOP;' || chr(10) ||
-            '        ' || chr(10) ||
             '        -- calculate the ancestors once for all m-objects' || chr(10) ||
             '        ancestors := mobject_ty.calculate_ancestors(parents);' || chr(10) ||
             '        ' || chr(10) ||
@@ -1649,6 +1665,16 @@ CREATE OR REPLACE TYPE BODY dimension_ty AS
     
     
     MEMBER PROCEDURE bulk_create_mobject(onames          names_tty, 
+                                         top_level       VARCHAR2,
+                                         parents         mobject_trty,
+                                         level_hierarchy level_hierarchy_tty) IS
+    BEGIN
+        NULL;
+    END;
+    
+    
+    MEMBER PROCEDURE bulk_create_mobject(onames          names_tty, 
+                                         ids             names_tty, 
                                          top_level       VARCHAR2,
                                          parents         mobject_trty,
                                          level_hierarchy level_hierarchy_tty) IS
