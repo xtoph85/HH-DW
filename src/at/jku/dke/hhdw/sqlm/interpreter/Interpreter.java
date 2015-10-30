@@ -6,7 +6,7 @@ import at.jku.dke.sqlm.parser.*;
 
 public class Interpreter {
 	
-	static boolean first=true;
+	public static boolean first=true;
 	
 	public static ResultSet sqlmQuery(oracle.sql.CLOB clob_input) throws Exception{
 		String input = clob_input.getSubString(1, (int)clob_input.length());
