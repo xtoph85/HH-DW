@@ -55,6 +55,8 @@ After installing the Java stored procedures run the src/at/jku/dke/hhdw/sqlm/int
 
 For more information on the SQL(M) language and the corresponding interpreter in Java, please refer to Thomas Pecksteiner's Master's thesis [2].
 
+##Examples
+
 ##Contributors
 
 Christoph G. Schuetz (Project Leader)
