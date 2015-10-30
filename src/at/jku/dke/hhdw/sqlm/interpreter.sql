@@ -10,5 +10,5 @@ end;
 /
 
 CREATE OR REPLACE FUNCTION sqlm_query(input CLOB) RETURN refcurpkg.refcur_ty IS
-  LANGUAGE JAVA NAME 'at.jku.dke.sqlm.interpreter.Interpreter.sqlmQuery(oracle.sql.CLOB) return java.sql.ResultSet';
+  LANGUAGE JAVA NAME 'at.jku.dke.hhdw.sqlm.interpreter.Interpreter.sqlmQuery(oracle.sql.CLOB) return java.sql.ResultSet';
 /
