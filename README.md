@@ -47,7 +47,7 @@ loadjava -u username/password -v -resolve filename
 
 Example: loadjava -u scott/tiger -v -resolve C:\Interpreter.jar
 
-For deleting the SQL(m) interpreter use the following command-line instruction:
+For deleting the SQL(M) interpreter use the following command-line instruction:
 
 dropjava -u username/password -v filename
 
